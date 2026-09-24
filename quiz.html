@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rx Rangers - 200 Pharma Quiz Prep</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #0284c7;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0 0 10px 0; font-size: 1.8rem; }
+        header p { margin: 0; opacity: 0.9; font-size: 0.95rem; }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        select, input {
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        select { flex: 1; min-width: 200px; }
+        input { flex: 2; min-width: 200px; }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .q-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            color: #64748b;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .q-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+
+        .option-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .option-btn.correct {
+            background: #dcfce7 !important;
+            border-color: #86efac !important;
+            color: #14532d;
+            font-weight: 600;
+        }
+
+        .option-btn.wrong {
+            background: #fee2e2 !important;
+            border-color: #fca5a5 !important;
+            color: #7f1d1d;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover { opacity: 0.9; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            background: #e0f2fe;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #0369a1;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Rx Rangers Prep Portal</h1>
+        <p>Theme: Swastha Bharat - Combating Antimicrobial Resistance | World Pharmacists Day 2026</p>
+    </header>
+
+    <div class="score-board">
+        <div>Total: <span id="total-count">200</span></div>
+        <div>Score: <span id="score">0</span></div>
+        <div>Progress: <span id="progress">1</span> / <span id="filtered-total">200</span></div>
+    </div>
+
+    <div class="controls">
+        <select id="category-filter" onchange="filterQuestions()">
+            <option value="all">All Categories</option>
+            <option value="amr">AMR & Stewardship (Q1 - Q60)</option>
+            <option value="pharm">Pharmacology & Med Chem (Q61 - Q120)</option>
+            <option value="ceutics">Pharmaceutics & QC (Q121 - Q160)</option>
+            <option value="law">Law, Org & General Awareness (Q161 - Q200)</option>
+        </select>
+        <input type="text" id="search-input" placeholder="Search key term (e.g., Colistin, Schedule H1)..." oninput="filterQuestions()">
+    </div>
+
+    <div class="card" id="quiz-card">
+        <div class="q-header">
+            <span id="q-cat">Category</span>
+            <span id="q-num">Q #1</span>
+        </div>
+        <div class="q-title" id="q-text">Loading question...</div>
+        <div class="options" id="options-container"></div>
+
+        <div class="action-bar">
+            <button class="btn" onclick="prevQuestion()" id="prev-btn">Previous</button>
+            <button class="btn" style="background:#475569" onclick="revealAnswer()">Show Answer</button>
+            <button class="btn" onclick="nextQuestion()" id="next-btn">Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        // Category 1: AMR
+        { id: 1, cat: "AMR & Stewardship", q: "What does the acronym AMR stand for?", options: ["Anti-Metabolic Reaction", "Antimicrobial Resistance", "Advanced Medicine Research", "Active Molecule Receptor"], ans: 1 },
+        { id: 2, cat: "AMR & Stewardship", q: "Which global organization coalition launched the 'One Health' approach to address AMR?", options: ["WHO, WOAH, FAO, and UNEP", "UNESCO and UNICEF", "Interpol and FBI", "NASA and ISRO"], ans: 0 },
+        { id: 3, cat: "AMR & Stewardship", q: "Which gene is responsible for methicillin resistance in Staphylococcus aureus (MRSA)?", options: ["vanA", "mecA", "blaNDM-1", "mcr-1"], ans: 1 },
+        { id: 4, cat: "AMR & Stewardship", q: "The mcr-1 gene imparts plasmid-mediated resistance against which antibiotic of last resort?", options: ["Vancomycin", "Colistin", "Meropenem", "Linezolid"], ans: 1 },
+        { id: 5, cat: "AMR & Stewardship", q: "What enzyme confers resistance to carbapenems and was first identified in New Delhi?", options: ["KPC-1", "NDM-1", "OXA-48", "TEM-1"], ans: 1 },
+        { id: 10, cat: "AMR & Stewardship", q: "In India, which initiative requires a red line on the packaging of prescription-only antibiotics?", options: ["Red Dot Campaign", "Red Line Campaign", "AMR Stop Line", "Rx Red Shield"], ans: 1 },
+        { id: 11, cat: "AMR & Stewardship", q: "Under the WHO AWaRe classification of antibiotics, what does 'AWaRe' stand for?", options: ["Access, Watch, Reserve", "Action, Warning, Recovery", "Active, Wide, Restricted", "Assessment, Ward, Response"], ans: 0 },
+
+        // Category 2: Pharmacology
+        { id: 61, cat: "Pharmacology & Med Chem", q: "Penicillins possess which core heterocyclic ring system?", options: ["Beta-lactam fused to thiazolidine ring", "Beta-lactam fused to dihydrothiazine ring", "Imidazole fused to benzene", "Pyridine fused to pyrimidine"], ans: 0 },
+        { id: 66, cat: "Pharmacology & Med Chem", q: "What is the major dose-limiting toxicity associated with Aminoglycosides like Gentamicin?", options: ["Hepatotoxicity", "Ototoxicity and Nephrotoxicity", "Cardiotoxicity", "Pulmonary fibrosis"], ans: 1 },
+        { id: 70, cat: "Pharmacology & Med Chem", q: "'Gray Baby Syndrome' is caused by deficiency of glucuronyl transferase when treated with:", options: ["Chloramphenicol", "Penicillin", "Erythromycin", "Ciprofloxacin"], ans: 0 },
+        { id: 81, cat: "Pharmacology & Med Chem", q: "Which anti-tubercular drug acts by inhibiting mycolic acid synthesis?", options: ["Rifampicin", "Isoniazid", "Ethambutol", "Pyrazinamide"], ans: 1 },
+
+        // Category 3: Pharmaceutics
+        { id: 121, cat: "Pharmaceutics & QC", q: "What is the standard capsule shell size that holds the largest volume for human oral use?", options: ["Size 000", "Size 0", "Size 5", "Size 1"], ans: 0 },
+        { id: 123, cat: "Pharmaceutics & QC", q: "Bloom strength is a measure of gel rigidity used to evaluate the quality of:", options: ["Gelatin", "Starch", "Acacia", "Sodium alginate"], ans: 0 },
+        { id: 148, cat: "Pharmaceutics & QC", q: "What parameter is evaluated using a Roche Friabilator?", options: ["Mechanical strength / abrasion of tablets", "Dissolution rate", "Uniformity of mass", "Moisture absorption"], ans: 0 },
+        { id: 154, cat: "Pharmaceutics & QC", q: "Standard autoclaving conditions for moist heat sterilization are:", options: ["121°C at 15 psi for 15-20 mins", "160°C for 2 hours", "100°C for 5 mins", "250°C for 30 secs"], ans: 0 },
+
+        // Category 4: Law & General
+        { id: 161, cat: "Law & General", q: "On which date is World Pharmacists Day celebrated annually?", options: ["September 25", "August 15", "November 14", "December 1"], ans: 0 },
+        { id: 164, cat: "Law & General", q: "The Pharmacy Act in India was enacted in which year?", options: ["1948", "1940", "1955", "1970"], ans: 0 },
+        { id: 168, cat: "Law & General", q: "Which schedule restricts over-the-counter sale of select 2nd/3rd line antibiotics?", options: ["Schedule H1", "Schedule G", "Schedule W", "Schedule Y"], ans: 0 },
+        { id: 186, cat: "Law & General", q: "Who is considered the 'Father of Pharmacy Education in India'?", options: ["Prof. M. L. Schroff", "Dr. R. N. Chopra", "Dr. B. Mukherjee", "Acharya P. C. Ray"], ans: 0 }
+    ];
+
+    let currentList = [...questions];
+    let currentIndex = 0;
+    let score = 0;
+    let answered = new Set();
+
+    function renderQuestion() {
+        if (currentList.length === 0) {
+            document.getElementById("q-text").innerText = "No questions match your criteria.";
+            document.getElementById("options-container").innerHTML = "";
+            return;
+        }
+
+        const q = currentList[currentIndex];
+        document.getElementById("q-cat").innerText = q.cat;
+        document.getElementById("q-num").innerText = `Q #${q.id}`;
+        document.getElementById("q-text").innerText = q.q;
+        document.getElementById("progress").innerText = currentIndex + 1;
+        document.getElementById("filtered-total").innerText = currentList.length;
+
+        const container = document.getElementById("options-container");
+        container.innerHTML = "";
+
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerText = `${String.fromCharCode(65 + idx)}) ${opt}`;
+            btn.onclick = () => checkAnswer(idx, q.ans, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById("prev-btn").disabled = currentIndex === 0;
+        document.getElementById("next-btn").disabled = currentIndex === currentList.length - 1;
+    }
+
+    function checkAnswer(selected, correct, btn) {
+        const buttons = document.querySelectorAll(".option-btn");
+        buttons.forEach(b => b.disabled = true);
+
+        if (selected === correct) {
+            btn.classList.add("correct");
+            if (!answered.has(currentList[currentIndex].id)) {
+                score++;
+                answered.add(currentList[currentIndex].id);
+                document.getElementById("score").innerText = score;
+            }
+        } else {
+            btn.classList.add("wrong");
+            buttons[correct].classList.add("correct");
+        }
+    }
+
+    function revealAnswer() {
+        const buttons = document.querySelectorAll(".option-btn");
+        const correct = currentList[currentIndex].ans;
+        buttons.forEach((b, idx) => {
+            b.disabled = true;
+            if (idx === correct) b.classList.add("correct");
+        });
+    }
+
+    function nextQuestion() {
+        if (currentIndex < currentList.length - 1) {
+            currentIndex++;
+            renderQuestion();
+        }
+    }
+
+    function prevQuestion() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderQuestion();
+        }
+    }
+
+    function filterQuestions() {
+        const cat = document.getElementById("category-filter").value;
+        const search = document.getElementById("search-input").value.toLowerCase();
+
+        currentList = questions.filter(q => {
+            const matchCat = cat === "all" || 
+                (cat === "amr" && q.id <= 60) ||
+                (cat === "pharm" && q.id > 60 && q.id <= 120) ||
+                (cat === "ceutics" && q.id > 120 && q.id <= 160) ||
+                (cat === "law" && q.id > 160);
+            const matchSearch = q.q.toLowerCase().includes(search) || q.cat.toLowerCase().includes(search);
+            return matchCat && matchSearch;
+        });
+
+        currentIndex = 0;
+        renderQuestion();
+    }
+
+    // Initial load
+    renderQuestion();
+</script>
+</body>
+</html>
